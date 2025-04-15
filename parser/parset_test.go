@@ -14,8 +14,6 @@ let y = 10;
 let foobar = 838383;
 `
 	l := lexer.New(input)
-
-	// New Parser
 	p := New(l)
 
 	program := p.ParseProgram()
