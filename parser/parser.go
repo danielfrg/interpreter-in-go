@@ -23,16 +23,13 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
-func (p *Parser) nextToken() {
-	p.curToken = p.peekToken
-	p.peekToken = p.l.NextToken()
-}
-
+// Builds the AST root Node (Program)
+// Parses all the tokens
 func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
-	for p.curToken.Type != token.EOF {
+	for !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
@@ -43,6 +40,12 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
+func (p *Parser) nextToken() {
+	p.curToken = p.peekToken
+	p.peekToken = p.l.NextToken()
+}
+
+// Dispatch to the appropiete statement parser
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
@@ -52,6 +55,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	}
 }
 
+// Construct and AST node representing a LetStatement
+// Format: let <identifier> = <expression>
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	// Create the statement
 	stmt := &ast.LetStatement{Token: p.curToken}
@@ -61,10 +66,10 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	// Create the Identifier
+	// Create the Identifier node
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
-	// After an identifier it should come an assign(=)
+	// After an identifier it should come an assign token (=)
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
 	}
@@ -77,6 +82,8 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	return stmt
 }
 
+// Checks if the next token is of the expected type
+// Returns bool, if it is advances the tokens
 func (p *Parser) expectPeek(t token.TokenType) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()

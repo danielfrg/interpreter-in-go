@@ -2,20 +2,27 @@ package ast
 
 import "monkey/token"
 
+// All nodes must implement this interface
 type Node interface {
 	TokenLiteral() string
 }
 
+// language constructs that perform actions but don't produce values
+// embed: Node interface
 type Statement interface {
 	Node
 	statementNode()
 }
 
+// language construct that produce values
+// embed: Node interface
 type Expression interface {
 	Node
 	expressionNode()
 }
 
+// Root Node of the AST
+// Implements: Node
 type Program struct {
 	Statements []Statement
 }
@@ -28,9 +35,11 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+// Represents a variable binding statement: let x = 5;
+// Implements: Statement
 type LetStatement struct {
 	Token token.Token // token.LET
-	Name  *Identifier
+	Name  *Identifier // Variable name
 	Value Expression
 }
 
@@ -39,9 +48,10 @@ func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
 
+// Implements: Expression
 type Identifier struct {
 	Token token.Token // token.IDENT
-	Value string
+	Value string      // Value of the idenfitier, the name
 }
 
 func (i *Identifier) expressionNode() {}

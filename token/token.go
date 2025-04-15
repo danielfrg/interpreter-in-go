@@ -12,7 +12,7 @@ const (
 	EOF     = "EOF"
 
 	// Identifiers + literals
-	IDENT = "IDENT"
+	IDENT = "IDENT" // e.g. variable names, funcion names
 	INT   = "INT"
 
 	// Operators
@@ -58,8 +58,10 @@ var keywords = map[string]TokenType{
 }
 
 func LookupIdent(ident string) TokenType {
-	if tok, ok := keywords[ident]; ok {
-		return tok
+	if keyword_tok, ok := keywords[ident]; ok {
+		return keyword_tok
 	}
+
+	// if its not a keyword its an identifier
 	return IDENT
 }

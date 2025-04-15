@@ -42,7 +42,7 @@ func TestNextToken1(t *testing.T) {
 	}
 }
 
-// Test basic monkey language with multiple symbols and multi-char tokens
+// Test basic monkey language with multiple symbols and identifiers
 func TestNextToken2(t *testing.T) {
 	input := `let five = 5;
 let ten = 10;
