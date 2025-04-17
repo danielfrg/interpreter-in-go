@@ -14,6 +14,9 @@ type Parser struct {
 
 	curToken  token.Token
 	peekToken token.Token
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -21,6 +24,9 @@ func New(l *lexer.Lexer) *Parser {
 		l:      l,
 		errors: []string{},
 	}
+
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -59,12 +65,12 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
 // Construct and AST node representing a LetStatement
-// Format: let <identifier> = <expression>
+// Format: let <identifier> = <expression>;
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	// Create the statement
 	stmt := &ast.LetStatement{Token: p.curToken}
@@ -91,7 +97,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 }
 
 // Construct and AST node representing a LetStatement
-// Format: return <expression>
+// Format: return <expression>;
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	// Create the statement
 	stmt := &ast.ReturnStatement{Token: p.curToken}
@@ -134,4 +140,66 @@ func (p *Parser) peekError(t token.TokenType) {
 	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
 		t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
+}
+
+// ----------------
+// Expressions
+
+const (
+	_ int = iota
+	LOWEST
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -x or !x
+	CALL        // myFunction(x)
+)
+
+// These functions get called when we encounter the token type for each operator
+type (
+	// prefix operators
+	prefixParseFn func() ast.Expression
+
+	// infix operator: Argument is the left-side of the operator
+	infixParseFn func(ast.Expression) ast.Expression
+)
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
+}
+
+// Construct an AST Node representing a ExpressionStatement
+// Format: <expression>;
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken}
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	// Semicolon is optional
+	// We can just call the Expression Statement on the REPL without semicolon
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+
+	if prefix == nil {
+		return nil
+	}
+
+	leftExp := prefix()
+
+	return leftExp
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
