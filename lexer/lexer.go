@@ -93,6 +93,7 @@ func (l *Lexer) NextToken() token.Token {
 
 	// prepare for next iteration
 	l.readChar()
+
 	return tok
 }
 
