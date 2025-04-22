@@ -179,3 +179,26 @@ func (es *ExpressionStatement) GoString() string {
 	return fmt.Sprintf("&ast.ExpressionStatement{Token:%#v, Expression:%#v}",
 		es.Token, es.Expression)
 }
+
+// Represents an integer
+// e.g. 5;
+// Implements Expression
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (il *IntegerLiteral) expressionNode() {}
+
+func (il *IntegerLiteral) TokenLiteral() string {
+	return il.Token.Literal
+}
+
+func (il *IntegerLiteral) String() string {
+	return il.Token.Literal
+}
+
+func (il *IntegerLiteral) GoString() string {
+	return fmt.Sprintf("&ast.IntegerLiteal{Token:%#v, Value:%#v}",
+		il.Token, il.Value)
+}
