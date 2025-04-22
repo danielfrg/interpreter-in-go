@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"fmt"
 
 	"monkey/token"
 )
@@ -10,6 +11,9 @@ import (
 type Node interface {
 	TokenLiteral() string
 	String() string
+
+	// required for %#v custom formatting
+	GoString() string
 }
 
 // language constructs that perform actions but don't produce values
@@ -50,6 +54,16 @@ func (p *Program) String() string {
 	return out.String()
 }
 
+func (p *Program) GoString() string {
+	var out bytes.Buffer
+	out.WriteString("&ast.Program{\n")
+	for _, s := range p.Statements {
+		out.WriteString(fmt.Sprintf("\t%#v,\n", s))
+	}
+	out.WriteString("}")
+	return out.String()
+}
+
 // Represents a variable binding statement
 // Format: let <identifier> = <expression>
 // Implements: Statement
@@ -80,6 +94,11 @@ func (ls *LetStatement) String() string {
 	return out.String()
 }
 
+func (ls *LetStatement) GoString() string {
+	return fmt.Sprintf("&ast.LetStatement{Token:%#v, Name:%#v, Value:%#v}",
+		ls.Token, ls.Name, ls.Value)
+}
+
 // Implements: Expression
 type Identifier struct {
 	Token token.Token // token.IDENT
@@ -93,6 +112,13 @@ func (i *Identifier) TokenLiteral() string {
 
 func (i *Identifier) String() string {
 	return i.Value
+}
+
+// Implement GoString for Identifier
+func (i *Identifier) GoString() string {
+	// Use %#v for the Token struct, %q for the string value
+	return fmt.Sprintf("&ast.Identifier{Token:%#v, Value:%q}",
+		i.Token, i.Value)
 }
 
 // Represents a return
@@ -122,6 +148,12 @@ func (rs *ReturnStatement) String() string {
 	return out.String()
 }
 
+// Implement GoString for ReturnStatement
+func (rs *ReturnStatement) GoString() string {
+	return fmt.Sprintf("&ast.ReturnStatement{Token:%#v, ReturnValue:%#v}",
+		rs.Token, rs.ReturnValue)
+}
+
 // Represents a statement that consists solely of one expression.
 // It's a wrapper
 // e.g. x + 10;
@@ -141,4 +173,9 @@ func (es *ExpressionStatement) String() string {
 		return es.Expression.String()
 	}
 	return ""
+}
+
+func (es *ExpressionStatement) GoString() string {
+	return fmt.Sprintf("&ast.ExpressionStatement{Token:%#v, Expression:%#v}",
+		es.Token, es.Expression)
 }
