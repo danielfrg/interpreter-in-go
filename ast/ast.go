@@ -199,6 +199,37 @@ func (il *IntegerLiteral) String() string {
 }
 
 func (il *IntegerLiteral) GoString() string {
-	return fmt.Sprintf("&ast.IntegerLiteal{Token:%#v, Value:%#v}",
+	return fmt.Sprintf("&ast.IntegerLiteral{Token:%#v, Value:%#v}",
 		il.Token, il.Value)
+}
+
+// Represents a Prefix Operator
+// <prefix operator><expression>;
+// Implements Expression
+type PrefixExpression struct {
+	Token    token.Token // The prefix token e.g. !,-
+	Operator string
+	Right    Expression
+}
+
+func (pe *PrefixExpression) expressionNode() {}
+
+func (pe *PrefixExpression) TokenLiteral() string {
+	return pe.Token.Literal
+}
+
+func (pe *PrefixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(pe.Operator)
+	out.WriteString(pe.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
+func (il *PrefixExpression) GoString() string {
+	return fmt.Sprintf("&ast.PrefixExpression{Token:%#v, Right:%#v}",
+		il.Token, il.Right)
 }
